@@ -236,7 +236,7 @@ TEST_CASE("World :: callbacks", "[ECS]")
 	{
 		bool called = false;
 		auto callback = [&called](auto&, auto){ called = true; };
-		world.onCreate<int>().connect(callback);
+		auto callbackId = world.onCreate<int>().connect(callback);
 		SECTION("get called")
 		{
 			world.assign<int>(entity, 0);
@@ -244,8 +244,7 @@ TEST_CASE("World :: callbacks", "[ECS]")
 		}
 		SECTION("can be disconnected")
 		{
-			// FIXME: std::function::operator==() is not defined, need to make a wrapper with equality check
-			// world.onCreate<int>().disconnect(callback);
+			world.onCreate<int>().disconnect(callbackId);
 			world.assign<int>(entity, 0);
 			CHECK_FALSE(called);
 		}

@@ -77,7 +77,7 @@ public:
 
 	Entity createEntity()
 	{
-		auto newEntity = Entity{nextId++};
+		auto newEntity = Entity{nextEntityId++};
 		entities.insert(newEntity);
 		return newEntity;
 	}
@@ -133,7 +133,7 @@ public:
 	}
 
 private:
-	unsigned nextId = 0;
+	unsigned nextEntityId = 0;
 
 	struct StorageBase
 	{
@@ -161,27 +161,32 @@ private:
 
 		struct EventDispatcher
 		{
+			unsigned nextCallbackId = 0;
+
 			using Callback = std::function<void(World&, Entity)>;
 
-			void connect(Callback f)
+			unsigned connect(Callback f)
 			{
-				callbacks.push_back(f);
+				auto id = nextCallbackId++;
+				callbacks[id] = f;
+				return id;
 			}
 			
-			void disconnect(Callback f)
+			void disconnect(unsigned callbackId)
 			{
-				std::erase(callbacks, f);
+				callbacks.erase(callbackId);
 			}
 
 			void publish(World& world, Entity entity)
 			{
-				for (auto& callback: callbacks)
+				for (auto& item: callbacks)
 				{
+					auto& callback = item.second;
 					callback(world, entity);
 				}
 			}
 
-			std::vector<Callback> callbacks;
+			std::unordered_map<unsigned, Callback> callbacks;
 		};
 
 		EventDispatcher createEventDispatcher;
